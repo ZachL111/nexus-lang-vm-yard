@@ -1,68 +1,40 @@
 # nexus-lang-vm-yard
 
-`nexus-lang-vm-yard` explores compilers in Julia. The repository keeps the core rule set compact, then surrounds it with examples that show how the decisions move.
+`nexus-lang-vm-yard` explores compilers with a small Julia codebase and local fixtures. The technical goal is to create a Julia reference implementation for vm workflows, centered on security rule linting, safe and unsafe fixtures, and remediation hints.
 
-## Nexus Lang VM Yard Notes
+## Use Case
 
-The quickest review path is the verifier first, then the fixtures, then the operations note. That order makes it easy to see whether the code, data, and explanation still agree.
+The point is to make a small domain rule concrete enough that a reader can change it and immediately see what broke.
 
-## Why This Exists
+## Nexus Lang VM Yard Review Notes
 
-The goal is to capture the core behavior in code and make the surrounding assumptions obvious. A reader should be able to run the verifier, open the fixtures, and understand why each decision was made.
+`recovery` and `stale` are the cases worth reading first. They show the optimistic and cautious ends of the fixture.
 
-## Feature Notes
+## Highlights
 
-- Models source form with deterministic scoring and explicit review decisions.
-- Uses fixture data to keep intermediate state changes visible in code review.
-- Includes extended examples for bytecode output, including `surge` and `degraded`.
-- Documents evaluation checks tradeoffs in `docs/operations.md`.
-- Runs locally with a single verification command and no external credentials.
+- `fixtures/domain_review.csv` adds cases for IR pressure and lowering drift.
+- `metadata/domain-review.json` records the same cases in structured form.
+- `config/review-profile.json` captures the read order and the two review questions.
+- `examples/nexus-lang-vm-walkthrough.md` walks through the case spread.
+- The Julia code includes a review path for `diagnostic reach` and `IR pressure`.
+- `docs/field-notes.md` explains the strongest and weakest cases.
 
-## Implementation Notes
+## Code Layout
 
-The core is a scoring model over demand, capacity, latency, risk, and weight. That keeps source form, intermediate state, and bytecode output in one explicit decision path. The threshold is 158, with risk penalty 7, latency penalty 3, and weight bonus 4. The Julia project keeps the model in a small module with assertions in a local test script.
+The fixture data drives the tests. The code stays thin, while `metadata/domain-review.json` and `config/review-profile.json` explain what each case is meant to protect.
 
-## Code Tour
+The Julia code keeps the review rule close to the tests.
 
-- `src`: primary implementation
-- `tests`: verification harness
-- `fixtures`: compact golden scenarios
-- `examples`: expanded scenario set
-- `metadata`: project constants and verification metadata
-- `docs`: operations and extension notes
-- `scripts`: local verification and audit commands
-
-## Local Setup
-
-Install Julia and run the commands from the repository root. The project does not need credentials or a hosted service.
-
-## Try It
+## Run The Check
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1
 ```
 
-This runs the language-level build or test path against the compact fixture set.
+## Regression Path
 
-## Tests
+That command is also the regression path. It verifies the domain cases and catches mismatches between the CSV, metadata, and code.
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/audit.ps1
-```
+## Future Work
 
-The audit command checks repository structure and README constraints before it delegates to the verifier.
-
-## Example Scenarios
-
-The extended cases are not random smoke tests. `degraded` keeps pressure on the review path, while `surge` shows the model when capacity and weight are strong enough to clear the threshold.
-
-## Boundaries
-
-The examples cover useful edges, not every edge. A larger version would add malformed-input tests, richer reports, and deeper domain parsers.
-
-## Roadmap
-
-- Split the scoring constants into a typed configuration object and validate it before use.
-- Add a comparison mode that shows how decisions change when one signal is adjusted.
-- Add a loader for `examples/extended_cases.csv` and promote selected cases into the language test suite.
-- Add one more compilers fixture that focuses on a malformed or borderline input.
+No external service is required. A deeper version would add more negative cases and a clearer boundary around invalid input.
